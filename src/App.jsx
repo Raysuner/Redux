@@ -1,54 +1,63 @@
-import { createContext, useContext } from "react";
-import { useState } from "react";
+import { store, connect, appContext } from "./redux";
 import "./App.css";
 
-const appContext = createContext(null);
-
-const 大儿子 = () => (
-  <section>
-    大儿子
-    <User />
-  </section>
-);
-
-const 二儿子 = () => (
-  <section>
-    二儿子
-    <UserModifier />
-  </section>
-);
-
-const 幺儿子 = () => <section>幺儿子</section>;
-
-const User = () => {
-  const { appState } = useContext(appContext);
-  return <div>User: {appState.user.name}</div>;
+const 大儿子 = () => {
+  console.log("大儿子");
+  return (
+    <section>
+      大儿子
+      <User />
+    </section>
+  );
 };
 
-const UserModifier = () => {
-  const { appState, setAppState } = useContext(appContext);
+const 二儿子 = () => {
+  console.log("二儿子");
+  return (
+    <section>
+      二儿子
+      <UserModifier />
+    </section>
+  );
+};
+
+const 幺儿子 = connect()((props) => {
+  const { state } = props;
+  console.log("幺儿子");
+  return <section>幺儿子, group: {state.group}</section>;
+});
+
+const User = connect((state) => ({
+  user: state.user,
+}))((props) => {
+  console.log("User");
+  const { user } = props;
+  return <div>User: {user.name}</div>;
+});
+
+const UserModifier = connect()((props) => {
+  console.log("UserModifier");
+  const { dispatch, state } = props;
   const onChange = (e) => {
-    appState.user.name = e.target.value;
-    setAppState({ ...appState });
+    dispatch({
+      type: "updateUser",
+      payload: e.target.value,
+    });
   };
 
   return (
     <div>
-      <input value={appState.user.name} onChange={onChange} />
+      <input value={state.user.name} onChange={onChange} />
     </div>
   );
-};
+});
 
 function App() {
-  const [appState, setAppState] = useState({
-    user: {
-      name: "qing",
-    },
-  });
+  console.log("app");
 
   return (
     <div className="App">
-      <appContext.Provider value={{ appState, setAppState }}>
+      <appContext.Provider value={store}>
         <大儿子 />
         <二儿子 />
         <幺儿子 />
