@@ -1,75 +1,68 @@
-import { useState, useEffect, useContext, createContext } from "react";
+import { useContext, useEffect, useState, createContext } from "react";
 
 const appContext = createContext(null);
 
-const store = {
-  state: {
-    user: {
-      name: "qing",
-    },
-    group: "前端组",
-  },
-  listenerList: [],
-  setState(newState) {
-    store.state = newState;
-    store.listenerList.forEach((fn) => fn());
-  },
-  subscribe(fn) {
-    store.listenerList.push(fn);
-    return () => {
-      const idx = store.listenerList.indexOf(fn);
-      if (idx !== -1) {
-        store.listenerList.splice(idx, 1);
-      }
-    };
-  },
+export const Provider = ({ store, children }) => {
+  return <appContext.Provider value={store}>{children}</appContext.Provider>;
 };
 
-const reducer = (state, { type, payload }) => {
-  switch (type) {
-    case "updateUser":
-      return {
-        ...state,
-        user: {
-          ...state.user,
-          name: payload,
-        },
-      };
+export const createStore = (reducer, initialState) => {
+  const store = new Store(reducer, initialState);
+  return store;
+};
 
-    default:
-      return state;
+// const judgeIsChanged = (prevState, nextState) => {
+//   if (prevState === nextState) return false;
+
+//   let ret = false
+//   Object.keys(prevState).forEach(key => {
+//     if (typeof)
+//   });
+// };
+
+export const connect = (selector) => (Component) => (props) => {
+  const { state, subscribe, dispatch } = useContext(appContext);
+  const [, update] = useState({});
+  const finalState =
+    typeof selector === "function" ? selector(state) : { state };
+  useEffect(() => {
+    subscribe((nextState) => {
+      const newState =
+        typeof selector === "function" ? selector(nextState) : nextState;
+      // if (judgeIsChanged(state, newState)) {
+      update({});
+      // }
+    });
+  }, []);
+  return <Component {...props} {...finalState} dispatch={dispatch} />;
+};
+
+export class Store {
+  constructor(reducer, initialState) {
+    this.state = initialState;
+    this.reducer = reducer;
+    this.listeners = [];
   }
-};
 
-const isChanged = (oldValue, newValue) => {
-  for (const key in newValue) {
-    if (oldValue[key] !== newValue[key]) {
-      return true;
-    }
-  }
-  return false;
-};
+  getState = () => this.state;
 
-const connect = (selector) => (Component) => (props) => {
-  const { state, setState } = useContext(appContext);
-  const [, forceUpdate] = useState({});
-
-  const data = selector ? selector(state) : { state };
-
-  const dispatch = (action) => {
-    setState(reducer(state, action));
+  setState = (newState) => {
+    this.state = newState;
+    this.listeners.forEach((it) => {
+      it(this.state);
+    });
   };
 
-  useEffect(() => {
-    return store.subscribe(() => {
-      const newData = selector ? selector(store.state) : { state: store.state };
-      if (isChanged(data, newData)) {
-        forceUpdate({});
-      }
-    });
-  }, [selector]);
+  dispatch = (action) => {
+    this.setState(this.reducer(this.state, action));
+  };
 
-  return <Component {...props} {...data} dispatch={dispatch} />;
-};
-
-export { store, connect, appContext };
+  subscribe = (fn) => {
+    this.listeners.push(fn);
+    return () => {
+      const idx = this.listeners.indexOf(fn);
+      if (idx === -1) return;
+      this.listeners.splice(idx, 1);
+    };
+  };
+}
