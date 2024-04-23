@@ -1,4 +1,5 @@
 import { useContext, useEffect, useState, createContext } from "react";
+import isEqual from "lodash.isequal";
 
 const appContext = createContext(null);
 
@@ -11,30 +12,22 @@ export const createStore = (reducer, initialState) => {
   return store;
 };
 
-// const judgeIsChanged = (prevState, nextState) => {
-//   if (prevState === nextState) return false;
-
-//   let ret = false
-//   Object.keys(prevState).forEach(key => {
-//     if (typeof)
-//   });
-// };
-
 export const connect = (selector) => (Component) => (props) => {
-  const { state, subscribe, dispatch } = useContext(appContext);
+  const store = useContext(appContext);
+  const curState = store.getState();
   const [, update] = useState({});
-  const finalState =
-    typeof selector === "function" ? selector(state) : { state };
+  const state =
+    typeof selector === "function" ? selector(curState) : { state: curState };
   useEffect(() => {
-    subscribe((nextState) => {
+    return store.subscribe((nextState) => {
       const newState =
         typeof selector === "function" ? selector(nextState) : nextState;
-      // if (judgeIsChanged(state, newState)) {
-      update({});
-      // }
+      if (!isEqual(state, newState)) {
+        update({});
+      }
     });
   }, []);
-  return <Component {...props} {...finalState} dispatch={dispatch} />;
+  return <Component {...props} {...state} dispatch={store.dispatch} />;
 };
 
 export class Store {

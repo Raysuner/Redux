@@ -14,7 +14,11 @@ const 二儿子 = () => (
     <UserModifier />
   </section>
 );
-const 幺儿子 = () => <section>幺儿子</section>;
+const 幺儿子 = connect((state) => ({
+  group: state.group,
+}))(() => {
+  return <section>幺儿子</section>;
+});
 const User = connect()(({ state }) => {
   return <div>User:{state.user.name}</div>;
 });

@@ -5,6 +5,9 @@ const initialState = {
     name: "ztq",
     age: 18,
   },
+  group: {
+    name: "前端组",
+  },
 };
 
 const reducer = (state, { type, payload }) => {
