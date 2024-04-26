@@ -1,4 +1,4 @@
-import { createStore } from "./src/redux";
+import { createStore, applyMiddleware, thunk } from "./redux";
 
 const initialState = {
   user: {
@@ -22,4 +22,4 @@ const reducer = (state, { type, payload }) => {
   }
 };
 
-export default createStore(reducer, initialState);
+export default createStore(reducer, initialState, applyMiddleware(thunk));
